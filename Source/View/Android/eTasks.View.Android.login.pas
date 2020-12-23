@@ -6,7 +6,8 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.TabControl,
   FMX.Objects, FMX.Effects, FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts,
-  FMX.Edit;
+  FMX.Edit, eTasks.View.Dialogs.Factory, FMX.MediaLibrary.Actions,
+  System.Actions, FMX.ActnList, FMX.StdActns, system.permissions;
 
 type
   TForm_Android_Login = class(TForm)
@@ -78,6 +79,10 @@ type
     Scroll_criar_conta: TVertScrollBox;
     Img_CriarConta_voltar: TImage;
     Scroll_login: TVertScrollBox;
+    ListaAcoes: TActionList;
+    ActFotoGaleria: TTakePhotoFromLibraryAction;
+    ActFotoCamera: TTakePhotoFromCameraAction;
+    Img_semfoto: TImage;
     procedure FormCreate(Sender: TObject);
     procedure Btn_efetuar_loginClick(Sender: TObject);
     procedure TabInicioClick(Sender: TObject);
@@ -99,14 +104,35 @@ type
       Shift: TShiftState);
     procedure Btn_Termos_privacidadeClick(Sender: TObject);
     procedure Foto_usuarioClick(Sender: TObject);
+    procedure ActFotoCameraDidFinishTaking(Image: TBitmap);
+    procedure ActFotoGaleriaDidFinishTaking(Image: TBitmap);
+    procedure Btn_Esqueci_conta_enviarClick(Sender: TObject);
+    procedure Btn_criar_conta_criarClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
+    Sheet_fotos : iViewDialogsFactory;
+    Dialogs     : iViewDialogsFactory;
+    Termos      : iViewDialogsFactory;
+    Loading     : iViewDialogsFactory;
     FKBBounds: TRectF;
     FNeedOffset: Boolean;
     procedure CalcContentBoundsProc(Sender: TObject;
                                     var ContentBounds: TRectF);
     procedure RestorePosition;
     procedure UpdateKBBounds;
+    Procedure CriarConta;
+    Procedure EfetuarLogin;
+    Procedure EsqueciSenha;
+    Procedure TirarFotoCamera;
+    Procedure TirarFotoPermissao (sender: TObject; Const APermissions: Tarray<string>;
+                                  const AGrantResults: TArray<TPermissionStatus>);
+    Procedure GaleriaPermissao (sender: TObject; Const APermissions: Tarray<string>;
+                                  const AGrantResults: TArray<TPermissionStatus>);
+    Procedure DisplayTirarFoto (Sender: TObject; Const APermissions: TArray<string>;
+                                Const APostProc: TProc);
+    Procedure DisplayGaleria (Sender: TObject; Const APermissions: TArray<string>;
+                                Const APostProc: TProc);
   public
     { Public declarations }
   end;
@@ -120,11 +146,224 @@ implementation
 
 Uses
   eTasks.Libraries.Android, eTasks.View.Android.main, System.Math, FMX.VirtualKeyboard, FMX.platform,
-  eTasks.View.Dialogs.Factory, eTasks.View.Dialogs.Messages.Consts;
+  eTasks.View.Dialogs.Messages.Consts, RegularExpressions, eTasks.Controller.Login, eTasks.View.Dialogs.EditarFoto,
+  eTasks.libraries.Imagens64, eTasks.libraries, eTasks.View.Dialogs.TirarFoto;
+
+Const
+  ValidEmails : string = '[_a-zA-Z\d\-\.]+@([_a-zA-Z\d\-]+(\.[_a-zA-Z\d\-]+)+)';
+
+procedure TForm_Android_Login.ActFotoCameraDidFinishTaking(Image: TBitmap);
+Var
+  form_Editar_Foto : TForm_Editar_foto;
+begin
+     if not Assigned(form_editar_foto) then
+      form_Editar_Foto := TForm_Editar_foto.Create(Self);
+     try
+      form_editar_foto.Editar_foto.Bitmap := Image;
+      form_editar_foto.ShowModal(Procedure (ModalResult : TModalResult)
+                                 begin
+                                  if ModalResult = mrOk then
+                                   begin
+                                    Foto_usuario.Fill.Bitmap.Bitmap := Form_Editar_foto.Foto;
+                                    Foto_usuario.TagString := 'WithPhoto';
+                                   end;
+                                 end);
+     finally
+      //form_Editar_Foto.DisposeOf;
+     end;
+end;
+
+procedure TForm_Android_Login.ActFotoGaleriaDidFinishTaking(Image: TBitmap);
+Var
+  form_Editar_Foto : TForm_Editar_foto;
+begin
+     if not Assigned(form_editar_foto) then
+      Application.CreateForm(TForm_Editar_foto, form_Editar_Foto);
+     try
+      form_editar_foto.Editar_foto.Bitmap := Image;
+      form_editar_foto.ShowModal(Procedure (ModalResult : TModalResult)
+                                 begin
+                                  if ModalResult = mrOk then
+                                   begin
+                                    Foto_usuario.Fill.Bitmap.Bitmap := Form_Editar_foto.Foto;
+                                    Foto_usuario.TagString := 'WithPhoto';
+                                   end;
+                                  //form_Editar_Foto.DisposeOf;
+                                 end);
+
+     finally
+      //form_Editar_Foto.DisposeOf;
+     end;
+end;
 
 procedure TForm_Android_Login.Btn_criar_contaClick(Sender: TObject);
 begin
-  Nav_Tela_Login.GotoVisibleTab(2);
+  CriarConta;
+end;
+
+procedure TForm_Android_Login.Btn_criar_conta_criarClick(Sender: TObject);
+Var
+  Erro : Integer;
+  FService : IFMXVirtualKeyboardService;
+  FFotoPerfil : string;
+begin
+  TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, IInterface(FService));
+  if (FService <> Nil) and (TVirtualKeyboardState.Visible in FService.VirtualKeyboardState) then
+   begin
+    FService.HideVirtualKeyboard;
+   end;
+  if (Edit_criar_conta_nome.Text.IsEmpty) then
+   begin
+     Dialogs := TViewDialogsMessages.New;
+     Form_Android_Login.AddObject(
+                                  Dialogs.DialogMessages
+                                                     .TipoMensagem(tpmBranco_criar_nome)
+                                                     .AcaoBotao(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                 Edit_criar_conta_nome.SetFocus;
+                                                                end)
+                                                     .AcaoFundo(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                end)
+                                                     .Exibe
+                                 );
+     exit
+   end;
+  if (Edit_Criar_conta_email.Text.IsEmpty) then
+   begin
+     Dialogs := TViewDialogsMessages.New;
+     Form_Android_Login.AddObject(
+                                  Dialogs.DialogMessages
+                                                     .TipoMensagem(tpmBranco_criar_email)
+                                                     .AcaoBotao(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                 Edit_criar_conta_email.SetFocus;
+                                                                end)
+                                                     .AcaoFundo(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                end)
+                                                     .Exibe
+                                 );
+     exit
+   end;
+  if (Edit_criar_conta_senha.Text.IsEmpty) then
+   begin
+     Dialogs := TViewDialogsMessages.New;
+     Form_Android_Login.AddObject(
+                                  Dialogs.DialogMessages
+                                                     .TipoMensagem(tpmBranco_criar_senha)
+                                                     .AcaoBotao(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                 Edit_criar_conta_senha.SetFocus;
+                                                                end)
+                                                     .AcaoFundo(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                end)
+                                                     .Exibe
+                                 );
+     exit
+   end;
+  if not TRegEx.IsMatch(Edit_Criar_conta_email.Text, ValidEmails) then
+   begin
+     Dialogs := TViewDialogsMessages.New;
+     Form_Android_Login.AddObject(
+                                  Dialogs.DialogMessages
+                                                     .TipoMensagem(tpmInvalido_criar_email)
+                                                     .AcaoBotao(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                 Edit_criar_conta_email.SetFocus;
+                                                                end)
+                                                     .AcaoFundo(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                end)
+                                                     .Exibe
+                                 );
+     exit
+   end;
+  if Length(Edit_criar_conta_senha.Text) < 6 then
+   begin
+     Dialogs := TViewDialogsMessages.New;
+     Form_Android_Login.AddObject(
+                                  Dialogs.DialogMessages
+                                                     .TipoMensagem(tpmInvalido_criar_senha)
+                                                     .AcaoBotao(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                 Edit_criar_conta_senha.SetFocus;
+                                                                end)
+                                                     .AcaoFundo(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                end)
+                                                     .Exibe
+                                 );
+     exit
+   end;
+   teTasksLibrary.CustomThread(
+                               Procedure ()
+                               begin
+                                Loading := tviewdialogsmessages.New;
+                                Form_Android_Login.AddObject(
+                                                             Loading.Loading
+                                                                      .Mensagem('Criando conta. Aguarde ... ')
+                                                                      .AcaoLimpa(Procedure()
+                                                                                 begin
+                                                                                  Loading := nil;
+                                                                                 end)
+                                                                      .Exibe
+                                                            );
+                               end,
+                               Procedure ()
+                               begin
+                                if Foto_usuario.TagString = 'WithPhoto' then
+                                 FFotoPerfil := timagens64.toBase64(Foto_usuario.Fill.Bitmap.Bitmap)
+                                else
+                                 FFotoPerfil := '';
+                                tControllerLogin.New
+                                                 .Email(Edit_Criar_conta_email.Text)
+                                                 .Password(Edit_criar_conta_senha.Text)
+                                                 .Foto(FFotoPerfil)
+                                                 .Nome(Edit_criar_conta_nome.Text)
+                                                 .CriarConta(erro);
+                               end,
+                               Procedure ()
+                               begin
+                                Loading.Loading.Fechar;
+                                if erro = -1 then
+                                 begin
+                                  if not Assigned(Form_android_main) then
+                                   Application.CreateForm(TForm_Android_main, Form_Android_main);
+                                  Application.MainForm := Form_Android_main;
+                                  Form_Android_main.Show;
+                                  Close;
+                                 end
+                                else
+                                 begin
+                                  Dialogs := TViewDialogsMessages.New;
+                                  Form_Android_Login.AddObject(
+                                                               Dialogs.DialogMessages
+                                                                        .TipoMensagem(tTipoMensagem(erro))
+                                                                        .AcaoBotao(Procedure ()
+                                                                                   begin
+                                                                                    Dialogs := nil;
+                                                                                   end)
+                                                                        .AcaoFundo(Procedure ()
+                                                                                   begin
+                                                                                    Dialogs := nil;
+                                                                                   end)
+                                                                        .Exibe
+                                                                );
+                                 end;
+                               end
+                              );
 end;
 
 procedure TForm_Android_Login.Btn_Criar_conta_mostar_senhaClick(
@@ -135,26 +374,286 @@ end;
 
 procedure TForm_Android_Login.Btn_efetuar_loginClick(Sender: TObject);
 begin
-    Nav_Tela_Login.GotoVisibleTab(1);
+    EfetuarLogin;
 end;
 
 procedure TForm_Android_Login.Btn_EntrarClick(Sender: TObject);
+Var
+ FService : IFMXVirtualKeyboardService;
+ Erro     : integer;
 begin
-     {Application.CreateForm(TForm_Android_main, Form_Android_Main);
-     Application.MainForm := Form_Android_main;
-     Form_Android_main.Show;
-     Close;}
-     Form_Android_Login.AddObject(TViewDialogsMessages.New.DialogMessages.TipoMensagem(tpmSucessoConta).Exibe);
+  TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, IInterface(FService));
+  if (FService <> Nil) and (TVirtualKeyboardState.Visible in FService.VirtualKeyboardState) then
+   begin
+    FService.HideVirtualKeyboard;
+   end;
+   if (Edit_Login_email.Text.IsEmpty) Or (Edit_Login_Password.Text.IsEmpty) then
+    begin
+     if Edit_Login_email.Text.IsEmpty then
+      begin
+       Dialogs := TViewDialogsMessages.New;
+       Form_Android_Login.AddObject(
+                                    Dialogs.DialogMessages
+                                                     .TipoMensagem(tpmBranco_login_email)
+                                                     .AcaoBotao(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                 Edit_Login_email.SetFocus;
+                                                                end)
+                                                     .AcaoFundo(Procedure ()
+                                                                begin
+                                                                  Dialogs := nil;
+                                                                end)
+                                                     .Exibe);
+      end
+     else
+      begin
+       if Edit_Login_Password.Text.IsEmpty then
+        begin
+         Dialogs := TViewDialogsMessages.New;
+         Form_Android_Login.AddObject(
+                                      Dialogs.DialogMessages
+                                                     .TipoMensagem(tpmBranco_login_Senha)
+                                                     .AcaoBotao(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                 Edit_Login_password.SetFocus;
+                                                                end)
+                                                     .AcaoFundo(Procedure ()
+                                                                begin
+                                                                  Dialogs := nil;
+                                                                end)
+                                                     .Exibe);
+        end;
+      end;
+    end
+   else
+    begin
+      if (not TRegEx.IsMatch(Edit_Login_email.Text, ValidEmails)) or (Length(Edit_Login_Password.Text) < 6) then
+       begin
+        if not TRegEx.IsMatch(Edit_Login_email.Text, ValidEmails) then
+         begin
+          Dialogs := TViewDialogsMessages.New;
+          Form_Android_Login.AddObject(
+                                       Dialogs.DialogMessages
+                                                     .TipoMensagem(tpmInvalido_login_email)
+                                                     .AcaoBotao(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                 Edit_Login_email.SetFocus;
+                                                                end)
+                                                     .AcaoFundo(Procedure ()
+                                                                begin
+                                                                  Dialogs := nil;
+                                                                end)
+                                                     .Exibe);
+         end
+        else
+         begin
+          if Length(Edit_Login_Password.Text) < 6 then
+           begin
+            Dialogs := TViewDialogsMessages.New;
+            Form_Android_Login.AddObject(
+                                         Dialogs.DialogMessages
+                                                     .TipoMensagem(tpmInvalido_login_senha)
+                                                     .AcaoBotao(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                 Edit_Login_password.SetFocus;
+                                                                end)
+                                                     .AcaoFundo(Procedure ()
+                                                                begin
+                                                                  Dialogs := nil;
+                                                                end)
+                                                     .Exibe);
+           end;
+         end;
+       end
+      else
+       begin
+         teTasksLibrary.CustomThread(
+                                     procedure ()
+                                     begin
+                                      Loading := tViewDialogsMessages.New;
+                                      Form_Android_Login.AddObject(
+                                                                   Loading.Loading
+                                                                             .Mensagem('Entrando ... ')
+                                                                             .AcaoLimpa(Procedure ()
+                                                                                        begin
+                                                                                         Loading := nil;
+                                                                                        end)
+                                                                             .Exibe
+                                                                  );
+                                     end,
+                                     procedure ()
+                                     begin
+                                      tControllerLogin.New
+                                                       .Password(Edit_Login_Password.Text)
+                                                       .Email(Edit_Login_email.Text)
+                                                       .EfetuarLogin(Erro);
+                                     end,
+                                     procedure ()
+                                     begin
+                                      Loading.Loading.Fechar;
+                                      if erro = -1 then
+                                       begin
+                                        if not Assigned(Form_Android_main) then
+                                         Application.CreateForm(TForm_Android_main, Form_Android_main);
+                                        Application.MainForm := Form_Android_main;
+                                        Form_Android_main.Show;
+                                        Close;
+                                       end
+                                      else
+                                       begin
+                                        Dialogs := TViewDialogsMessages.New;
+                                        Form_Android_Login.AddObject(
+                                                                     Dialogs.DialogMessages
+                                                                              .TipoMensagem(tTipoMensagem(erro))
+                                                                              .AcaoBotao(Procedure ()
+                                                                                         begin
+                                                                                          Dialogs := nil;
+                                                                                         end)
+                                                                              .AcaoFundo(Procedure ()
+                                                                                         begin
+                                                                                          Dialogs := nil;
+                                                                                          end)
+                                                                              .Exibe
+                                                                     );
+                                        exit
+                                       end;
+                                     end
+                                    );
+       end;
+    end;
 end;
 
 procedure TForm_Android_Login.Btn_esqueci_contaClick(Sender: TObject);
+Var
+ FService : IFMXVirtualKeyboardService;
 begin
-   Nav_Tela_Login.GotoVisibleTab(3);
+  TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, IInterface(FService));
+  if (FService <> Nil) and (TVirtualKeyboardState.Visible in FService.VirtualKeyboardState) then
+   begin
+    FService.HideVirtualKeyboard;
+   end;
+  EsqueciSenha;
+end;
+
+procedure TForm_Android_Login.Btn_Esqueci_conta_enviarClick(Sender: TObject);
+Var
+ FService : IFMXVirtualKeyboardService;
+ Erro : integer;
+ EsqueciSenha : Boolean;
+begin
+  TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, IInterface(FService));
+  if (FService <> Nil) and (TVirtualKeyboardState.Visible in FService.VirtualKeyboardState) then
+   begin
+    FService.HideVirtualKeyboard;
+   end;
+  if (Edit_esqueci_conta_email.Text.IsEmpty) then
+   begin
+     Dialogs := tViewDialogsMessages.New;
+     Form_Android_Login.AddObject(
+                                  Dialogs.DialogMessages
+                                                    .TipoMensagem(tpmBranco_resetar_email)
+                                                    .AcaoBotao(Procedure()
+                                                               begin
+                                                                Dialogs := nil;
+                                                                Edit_esqueci_conta_email.SetFocus;
+                                                               end)
+                                                    .AcaoFundo(Procedure ()
+                                                               begin
+                                                                Dialogs := nil;
+                                                               end)
+                                                    .Exibe
+                                 );
+   end
+  else
+   begin
+    if not TRegEx.IsMatch(Edit_esqueci_conta_email.Text, ValidEmails) then
+     begin
+       Dialogs := tViewDialogsMessages.New;
+       Form_Android_Login.AddObject(
+                                    Dialogs.DialogMessages
+                                                     .TipoMensagem(tpmInvalido_resetar_email)
+                                                     .AcaoBotao(Procedure()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                end)
+                                                     .AcaoFundo(Procedure ()
+                                                                begin
+                                                                 Dialogs := nil;
+                                                                end)
+                                                     .Exibe
+                                   );
+     end
+    else
+     begin
+      teTasksLibrary.CustomThread(
+                                  procedure ()
+                                  begin
+                                    Loading := tviewdialogsmessages.New;
+                                    Form_Android_Login.AddObject(Loading.Loading
+                                                                          .Mensagem('Enviando solicitação ... ')
+                                                                          .AcaoLimpa(Procedure ()
+                                                                                     begin
+                                                                                      Loading := nil;
+                                                                                     end)
+                                                                          .Exibe
+                                                                );
+                                  end,
+                                  procedure ()
+                                  begin
+                                   EsqueciSenha := tControllerLogin.New.Email(Edit_esqueci_conta_email.Text).EsqueciConta(erro);
+                                  end,
+                                  procedure ()
+                                  begin
+                                    Loading.Loading.Fechar;
+                                    if EsqueciSenha then
+                                     begin
+                                      Dialogs := TViewDialogsMessages.New;
+                                      Form_Android_Login.AddObject(
+                                                                   Dialogs.DialogMessages
+                                                                            .TipoMensagem(tpmSucesso_resetar)
+                                                                            .AcaoBotao(Procedure ()
+                                                                                       begin
+                                                                                        Dialogs := nil;
+                                                                                        EfetuarLogin;
+                                                                                       end)
+                                                                            .AcaoFundo(Procedure ()
+                                                                                       begin
+                                                                                        Dialogs := nil;
+                                                                                        EfetuarLogin
+                                                                                       end)
+                                                                            .Exibe
+                                                                  );
+                                     end
+                                    else
+                                     begin
+                                      Dialogs := TViewDialogsMessages.New;
+                                      Form_Android_Login.AddObject(
+                                                                   Dialogs.DialogMessages
+                                                                             .TipoMensagem(tTipoMensagem(erro))
+                                                                             .AcaoBotao(Procedure ()
+                                                                                        begin
+                                                                                         Dialogs := nil;
+                                                                                        end)
+                                                                             .AcaoFundo(Procedure ()
+                                                                                        begin
+                                                                                         Dialogs := nil;
+                                                                                        end)
+                                                                             .Exibe
+                                                                   );
+                                     end;
+                                  end
+                                 );
+    end;
+   end;
 end;
 
 procedure TForm_Android_Login.Btn_Esqueci_senha_VoltarClick(Sender: TObject);
 begin
-   Nav_Tela_Login.GotoVisibleTab(1);
+   EfetuarLogin;
 end;
 
 procedure TForm_Android_Login.Btn_Login_mostrar_senhaClick(Sender: TObject);
@@ -163,8 +662,22 @@ begin
 end;
 
 procedure TForm_Android_Login.Btn_Termos_privacidadeClick(Sender: TObject);
+Var
+ FService : IFMXVirtualKeyboardService;
 begin
-  Form_Android_Login.AddObject(TViewDialogsMessages.New.DialogTermos.Exibe);
+  TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, IInterface(FService));
+  if (FService <> Nil) and (TVirtualKeyboardState.Visible in FService.VirtualKeyboardState) then
+   begin
+    FService.HideVirtualKeyboard;
+   end;
+  Termos := TViewDialogsMessages.New;
+  Form_Android_Login.AddObject(
+                               Termos.DialogTermos
+                                               .AcaoFundo(Procedure ()
+                                                          Begin
+                                                           Termos := nil;
+                                                          end)
+                                               .Exibe);
 end;
 
 procedure TForm_Android_Login.CalcContentBoundsProc(Sender: TObject;
@@ -175,6 +688,70 @@ begin
     ContentBounds.Bottom := Max(ContentBounds.Bottom,
                                 2 * ClientHeight - FKBBounds.Top);
   end;
+end;
+
+procedure TForm_Android_Login.CriarConta;
+begin
+  Foto_usuario.Fill.Bitmap.Bitmap := Img_semfoto.Bitmap;
+  Foto_usuario.TagString := 'WithoutPhoto';
+  Edit_criar_conta_nome.Text  := '';
+  Edit_Criar_conta_email.Text := '';
+  Edit_criar_conta_senha.Text := '';
+  Nav_Tela_Login.GotoVisibleTab(2);
+end;
+
+procedure TForm_Android_Login.DisplayGaleria(Sender: TObject;
+  const APermissions: TArray<string>; const APostProc: TProc);
+begin
+  Dialogs := TViewDialogsMessages.New;
+  Form_Android_Login.AddObject(
+                               Dialogs.DialogMessages
+                                          .AcaoBotao(Procedure ()
+                                                     begin
+                                                      Dialogs := nil;
+                                                      APostProc;
+                                                     end)
+                                          .AcaoFundo(Procedure ()
+                                                     begin
+                                                      Dialogs := nil;
+                                                     end)
+                                          .TipoMensagem(tpmPermissao_solicitar_galeria)
+                                          .Exibe
+                               );
+
+end;
+
+procedure TForm_Android_Login.DisplayTirarFoto(Sender: TObject;
+  const APermissions: TArray<string>; const APostProc: TProc);
+begin
+  Dialogs := TViewDialogsMessages.New;
+  Form_Android_Login.AddObject(
+                               Dialogs.DialogMessages
+                                         .AcaoBotao(Procedure ()
+                                                    begin
+                                                     Dialogs := nil;
+                                                     APostProc;
+                                                    end)
+                                         .AcaoFundo(Procedure ()
+                                                    begin
+                                                     Dialogs := nil;
+                                                    end)
+                                         .TipoMensagem(tpmPermissao_solicitar_camera)
+                                         .Exibe
+                              );
+end;
+
+procedure TForm_Android_Login.EfetuarLogin;
+begin
+   Edit_Login_Password.Text := '';
+   Edit_Login_email.Text    := '';
+   Nav_Tela_Login.GotoVisibleTab(1);
+end;
+
+procedure TForm_Android_Login.EsqueciSenha;
+begin
+  Edit_esqueci_conta_email.Text := '';
+  Nav_Tela_Login.GotoVisibleTab(3);
 end;
 
 procedure TForm_Android_Login.FormCreate(Sender: TObject);
@@ -197,17 +774,49 @@ begin
       TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, IInterface(FService));
       if (FService <> Nil) and (TVirtualKeyboardState.Visible in FService.VirtualKeyboardState) then
        begin
-         // Botão BACK pressionado e teclado vísivel, apenas fecha o teclad/o
+         // Botão BACK pressionado e teclado vísivel, apenas fecha o teclado
        end
       else
        begin
-         if (Nav_Tela_Login.ActiveTab = TabCriarConta) or (Nav_Tela_Login.ActiveTab = TabEsqueciSenha) then
+         if (Assigned(Sheet_fotos)) or (Assigned(Dialogs)) or (Assigned(Termos)) or (Assigned(Loading)) then
           begin
             Key := 0;
-            Nav_Tela_Login.GotoVisibleTab(1);
+            if Assigned(sheet_fotos) then
+             begin
+              Sheet_fotos.SheetFotos.Fechar;
+             end;
+            if Assigned(dialogs) then
+             begin
+              dialogs.DialogMessages.Fechar;
+             end;
+            if Assigned(Termos) then
+             begin
+              Termos.DialogTermos.Fechar;
+             end;
+          end
+         else
+          begin
+           if (Nav_Tela_Login.ActiveTab = TabCriarConta) or (Nav_Tela_Login.ActiveTab = TabEsqueciSenha) then
+            begin
+             Key := 0;
+             Nav_Tela_Login.GotoVisibleTab(1);
+            end;
           end;
-         end;
+       end;
     end;
+end;
+
+procedure TForm_Android_Login.FormShow(Sender: TObject);
+begin
+  Nav_Tela_Login.ActiveTab := TabInicio;
+  Foto_usuario.Fill.Bitmap.Bitmap := Img_semfoto.Bitmap;
+  Foto_usuario.TagString := 'WithoutPhoto';
+  Edit_criar_conta_nome.Text  := '';
+  Edit_Criar_conta_email.Text := '';
+  Edit_criar_conta_senha.Text := '';
+  Edit_esqueci_conta_email.Text := '';
+  Edit_Login_Password.Text := '';
+  Edit_Login_email.Text    := '';
 end;
 
 procedure TForm_Android_Login.FormVirtualKeyboardHidden(Sender: TObject;
@@ -228,13 +837,71 @@ begin
 end;
 
 procedure TForm_Android_Login.Foto_usuarioClick(Sender: TObject);
+Var
+ FService : IFMXVirtualKeyboardService;
 begin
-  Form_Android_Login.AddObject(TViewDialogsMessages.New.SheetFotos.Exibe);
+  TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, IInterface(FService));
+  if (FService <> Nil) and (TVirtualKeyboardState.Visible in FService.VirtualKeyboardState) then
+   begin
+    FService.HideVirtualKeyboard;
+   end;
+  Sheet_fotos := TViewDialogsMessages.New;
+  Form_Android_Login.AddObject(
+                               Sheet_fotos.SheetFotos
+                                                   .AcaoFundo(Procedure ()
+                                                              Begin
+                                                               Sheet_fotos := nil;
+                                                              end)
+                                                   .AcaoFoto(Procedure ()
+                                                             begin
+                                                              Sheet_fotos := nil;
+                                                              PermissionsService.RequestPermissions(tLibraryAndroid.PermissaoCamera, TirarFotoPermissao, DisplayTirarFoto);
+                                                             end)
+                                                   .AcaoGaleria(Procedure ()
+                                                             begin
+                                                              Sheet_fotos := nil;
+                                                              PermissionsService.RequestPermissions(tLibraryAndroid.PermissaoGaleria, GaleriaPermissao, DisplayGaleria);
+                                                             end)
+                                                   .Exibe);
+end;
+
+procedure TForm_Android_Login.GaleriaPermissao(sender: TObject;
+  const APermissions: Tarray<string>;
+  const AGrantResults: TArray<TPermissionStatus>);
+begin
+  if (length(AGrantResults) = 2) and
+     (AGrantResults[0] = TPermissionStatus.Granted) and
+     (AGrantResults[1] = TPermissionStatus.Granted) then
+    ActFotoGaleria.Execute
+   else
+    begin
+      Dialogs := TViewDialogsMessages.New;
+      Form_Android_Login.AddObject(
+                                   Dialogs.DialogMessages
+                                             .AcaoBotao(Procedure ()
+                                                        begin
+                                                          Dialogs := nil;
+                                                        end)
+                                             .AcaoFundo(Procedure ()
+                                                        begin
+                                                          Dialogs := nil;
+                                                        end)
+                                             .TipoMensagem(tpmPermissao_negada_galeria)
+                                             .Exibe
+                                  );
+    end;
 end;
 
 procedure TForm_Android_Login.Link_criar_contaClick(Sender: TObject);
+Var
+ FService : IFMXVirtualKeyboardService;
 begin
-   Nav_Tela_Login.GotoVisibleTab(2);
+  TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, IInterface(FService));
+  if (FService <> Nil) and (TVirtualKeyboardState.Visible in FService.VirtualKeyboardState) then
+   begin
+    FService.HideVirtualKeyboard;
+   end;
+  CriarConta;
 end;
 
 procedure TForm_Android_Login.Nav_Tela_LoginChange(Sender: TObject);
@@ -267,13 +934,76 @@ end;
 
 procedure TForm_Android_Login.Img_CriarConta_voltarClick(Sender: TObject);
 begin
-
-   Nav_Tela_Login.GotoVisibleTab(1);
+   efetuarLogin;
 end;
 
 procedure TForm_Android_Login.TabInicioClick(Sender: TObject);
 begin
     Nav_Tela_Login.GotoVisibleTab(2);
+end;
+
+procedure TForm_Android_Login.TirarFotoCamera;
+Var
+ form_camera : TForm_camera;
+ form_Editar_Foto : TForm_Editar_foto;
+begin
+  if not Assigned(form_camera) then
+   Application.CreateForm(TForm_Camera, form_camera);
+  try
+   form_camera.ShowModal(Procedure (ModalResult : TModalResult)
+                         begin
+                          if ModalResult = mrOk then
+                          begin
+                          if not Assigned(form_editar_foto) then
+                           Application.CreateForm(TForm_Editar_foto, form_Editar_Foto);
+                           try
+                            form_editar_foto.Editar_foto.Bitmap := form_camera.Imagem;
+                            form_editar_foto.ShowModal(Procedure (ModalResult : TModalResult)
+                                                                  begin
+                                                                   if ModalResult = mrOk then
+                                                                    begin
+                                                                     Foto_usuario.Fill.Bitmap.Bitmap := Form_Editar_foto.Foto;
+                                                                     Foto_usuario.TagString := 'WithPhoto';
+                                                                    end;
+                                                                   end);
+                           finally
+                            //form_Editar_Foto.DisposeOf;
+                           end;
+                          end;
+                         end);
+
+  finally
+   //form_camera.DisposeOf;
+  end;
+end;
+
+procedure TForm_Android_Login.TirarFotoPermissao(sender: TObject;
+  const APermissions: Tarray<string>;
+  const AGrantResults: TArray<TPermissionStatus>);
+begin
+  if (length(AGrantResults) = 3) and
+     (AGrantResults[0] = TPermissionStatus.Granted) and
+     (AGrantResults[1] = TPermissionStatus.Granted) and
+     (AGrantResults[2] = TPermissionStatus.Granted) then
+     TirarFotoCamera
+    //ActFotoCamera.Execute
+   else
+    begin
+     Dialogs := TViewDialogsMessages.New;
+     Form_Android_Login.AddObject(
+                                  Dialogs.DialogMessages
+                                              .AcaoBotao(Procedure ()
+                                                         begin
+                                                          Dialogs := nil;
+                                                         end)
+                                              .AcaoFundo(Procedure ()
+                                                         begin
+                                                          Dialogs := nil;
+                                                         end)
+                                              .TipoMensagem(tpmPermissao_negada_camera)
+                                              .Exibe
+                                   );
+    end;
 end;
 
 procedure TForm_Android_Login.UpdateKBBounds;

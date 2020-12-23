@@ -9,6 +9,8 @@ uses
   FMX.Ani;
 
 type
+  TipoAcao = (taBotao, taFundo);
+
   TDlg_Login_messages = class(TForm)
     Lay_dlg_messages: TLayout;
     RecEscurecer: TRectangle;
@@ -35,11 +37,15 @@ type
     { Private declarations }
     FTipoMensagem : tTipoMensagem;
     FAcaoBotao    : TProc;
+    FAcaoFundo    : TProc;
+    FTipoAcao     : TipoAcao;
   public
     { Public declarations }
     Function Exibe : TLayout;
     Function AcaoBotao (Value : TProc) : TDlg_Login_messages;
+    Function AcaoFundo (Value : TProc) : TDlg_Login_messages;
     Function TipoMensagem (Value : tTipoMensagem) : TDlg_Login_messages;
+    Procedure Fechar;
   end;
 
 var
@@ -57,16 +63,33 @@ begin
   FAcaoBotao := value;
 end;
 
+function TDlg_Login_messages.AcaoFundo(Value: TProc): TDlg_Login_messages;
+begin
+   Result := Self;
+   FAcaoFundo := value;
+end;
+
 procedure TDlg_Login_messages.AnimaFundoFinish(Sender: TObject);
 begin
    if AnimaFundo.Inverse = True then
-    Self.DisposeOf;
+    begin
+     case FTipoAcao of
+       taBotao: begin
+                 if Assigned(FAcaoBotao) then
+                  FAcaoBotao;
+                end;
+       taFundo: begin
+                 if Assigned(FAcaoFundo) then
+                  FAcaoFundo;
+                end;
+     end;
+     Self.DisposeOf;
+    end;
 end;
 
 procedure TDlg_Login_messages.Button_messageClick(Sender: TObject);
 begin
-  if assigned(FAcaoBotao) then
-   FAcaoBotao;
+  FTipoAcao := taBotao;
   AnimaDialogo.Inverse := True;
   AnimaFundo.Inverse := True;
   AnimaDialogo.Start;
@@ -80,14 +103,33 @@ begin
   AnimaDialogo.Start;
 end;
 
-procedure TDlg_Login_messages.FormCreate(Sender: TObject);
+procedure TDlg_Login_messages.Fechar;
 begin
+  Self.RecEscurecerClick(self);
+end;
+
+procedure TDlg_Login_messages.FormCreate(Sender: TObject);
+var
+ FMargem : single;
+begin
+  {$Ifdef Android}
+  FMargem := (Screen.Width - 320)/2;
+  RecDesignCaixa.Margins.Left := FMargem;
+  RecDesignCaixa.Margins.Right := FMargem;
+  {$Endif}
+  {$Ifdef MSWindows}
+  FMargem := (Self.Parent.Width - 320)/2;
+  RecDesignCaixa.Margins.Left := FMargem;
+  RecDesignCaixa.Margins.Right := FMargem;
+  {$endif}
   AnimaDialogo.Inverse := False;
   AnimaFundo.Inverse := False;
+  FTipoAcao := taFundo;
 end;
 
 procedure TDlg_Login_messages.RecEscurecerClick(Sender: TObject);
 begin
+  FTipoAcao := taFundo;
   AnimaDialogo.Inverse := True;
   AnimaFundo.Inverse := True;
   AnimaDialogo.Start;
