@@ -2,6 +2,9 @@ unit eTasks.Model.Interfaces;
 
 interface
 
+uses
+  System.JSON;
+
 Type
   TAuthUser = Record
     uID : string;
@@ -52,6 +55,36 @@ Type
     Function Foto : string; overload;
     Function Gravar (Token : string; out erro : string) : iModelUsuario;
     Function Ler (Token : string; out erro : string) : iModelUsuario;
+    Function Editar (Token : string; out erro : string) : iModelUsuario;
+  end;
+
+  iModelCategorias = interface
+    ['{B040C54C-AE21-4742-8E73-F5A89E1F0DF6}']
+    Function NovaCategoria (Categoria : TJSONValue; out Erro : string) : iModelCategorias;
+    Function EditarCategoria (Categoria : TJSONValue; id : string; out erro : string) : iModelCategorias;
+    Function ExcluirCategoria (id : string; out erro : string) : iModelCategorias;
+    Function ExibeCategoria (id : string; out erro : string) : string;
+    Function ListarCategorias (out erro : string) : string;
+  end;
+
+  iModelTarefas = interface
+    ['{48D702E1-9215-4011-9858-0CC634A4911B}']
+    Function CriarTarefa (Tarefa: tJSONValue; out erro : string) : iModelTarefas;
+    Function EditarTarefa (Tarefa: TJSONValue; id : string; out erro : string) : iModelTarefas;
+    Function ExcluirTarefa (id : string; out erro : string) : iModelTarefas;
+    Function MudarStatusTarefa (id, status : string; out erro : string) : iModelTarefas;
+    Function ExibeTarefa (id : string; out erro : string) : string;
+    Function ListarTarefas (data : string; out erro : string) : string;
+  end;
+
+  iModelMetas = interface
+    ['{14F9BA8E-5291-4481-8373-A24AD644C537}']
+    Function CriarMeta (Meta: tJSONObject; out erro : string) : iModelMetas;
+    Function EditarMeta (Meta: TJSONObject; id : string; out erro : string) : iModelMetas;
+    Function ExcluirMeta (id : string; out erro : string) : iModelMetas;
+    Function MudarStatusMeta (id, status : string; out erro : string) : iModelMetas;
+    Function ExibeMeta (id : string; out erro : string) : TJSONObject;
+    Function ListarMetas (out erro : string) : TJSONObject;
   end;
 
   iModelFactory = Interface
@@ -59,6 +92,9 @@ Type
     Function LoggedUser : iModelLoggedUser;
     Function Auth       : iModelAuth;
     Function Usuario    : iModelUsuario;
+    Function Categorias(uID, Token: string)  : iModelCategorias;
+    Function Tarefas(uID, Token : string) : iModelTarefas;
+    //Function Metas      : iModelMetas;
   End;
 
 implementation

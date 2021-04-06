@@ -3,7 +3,8 @@ unit eTasks.Controller.Login;
 interface
 
 uses
-  eTasks.Controller.Interfaces, eTasks.View.Dialogs.Messages.Consts;
+  eTasks.Controller.Interfaces,
+  eTasks.View.Dialogs.Messages.Consts;
 
 Type
   TControllerLogin = Class(TInterfacedObject, iControllerLogin)
@@ -29,7 +30,9 @@ Type
 implementation
 
 uses
-  eTasks.Model.Interfaces, eTasks.Model.Factory, System.SysUtils;
+  eTasks.Model.Interfaces,
+  eTasks.Model.Factory,
+  System.SysUtils;
 
 { TControllerLogin }
 
@@ -89,7 +92,6 @@ function TControllerLogin.EfetuarLogin(out Erro: integer): iControllerLogin;
 Var
  auth_credentials : TAuthUser;
  error : string;
- Erro1  : string;
 begin
   Result := self;
   Erro := -1;
