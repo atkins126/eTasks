@@ -1,48 +1,36 @@
-unit eTasks.View.Android.categories;
+unit eTasks.View.Windows.categories;
 
 interface
 
 uses
-  System.SysUtils,
-  System.Types,
-  System.UITypes,
-  System.Classes,
-  System.Variants,
-  FMX.Types,
-  FMX.Controls,
-  FMX.Forms,
-  FMX.Graphics,
-  FMX.Dialogs,
-  FMX.ListView.Types,
-  FMX.ListView.Appearances,
-  FMX.ListView.Adapters.Base,
-  FMX.Ani,
-  FMX.ScrollBox,
-  FMX.Edit,
-  FMX.Effects,
-  FMX.Objects,
-  FMX.ListView,
-  FMX.Controls.Presentation,
-  FMX.StdCtrls,
-  FMX.TabControl,
-  FMX.Layouts,
-  FMX.ListBox,
-  FMX.SearchBox,
+  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
+  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts, FMX.Objects,
+  FMX.SearchBox, FMX.ListBox, FMX.Edit, FMX.Effects, FMX.TabControl,
   eTasks.View.Dialogs.Factory;
 
 type
   tipo_acao = (taSelecionar, taListar);
   Toperacao = (Editar, Inserir);
 
-  TTela_categorias = class(TForm)
+  TWindows_Categories = class(TForm)
     Lay_main: TLayout;
     TabCategorias: TTabControl;
     TabListaCategoria: TTabItem;
     Lay_Topo_lista: TLayout;
     Lay_search: TLayout;
+    Rec_caixa_pesquisa: TRectangle;
+    ShadowEffect2: TShadowEffect;
+    Img_btn_pesquisar: TImage;
+    Ed_pesquisa: TEdit;
+    ListaCategorias: TListBox;
+    Lay_sem_categorias: TLayout;
+    Image_sem_categorias: TImage;
+    Label_sem_categorias: TLabel;
+    SearchBox1: TSearchBox;
     Btn_Add_tarefa: TImage;
+    Btn_Seleciona: TImage;
     TabEditaCategoria: TTabItem;
-    Btn_OK: TImage;
     Lay_tarefa: TLayout;
     Lay_tarefa_container: TLayout;
     Rec_tarefa: TRectangle;
@@ -54,6 +42,9 @@ type
     Lay_categoria_edit: TLayout;
     Linha_categoria_edit: TLine;
     Label_categoria_edit: TLabel;
+    ListaImagemCategoria: TListBox;
+    Btn_apaga_categoria: TImage;
+    Btn_OK: TImage;
     ToolBar_container: TLayout;
     ToolBar: TLayout;
     Linha_titulo: TLine;
@@ -61,45 +52,28 @@ type
     title_Categorias: TImage;
     title_EditaCategoria: TImage;
     title_NovaCategoria: TImage;
-    RecStatus: TRectangle;
-    AnimaStatus: TFloatAnimation;
-    Rec_caixa_pesquisa: TRectangle;
-    ShadowEffect2: TShadowEffect;
-    Img_btn_pesquisar: TImage;
-    Ed_pesquisa: TEdit;
-    Btn_Seleciona: TImage;
-    ListaImagemCategoria: TListBox;
-    Btn_apaga_categoria: TImage;
-    StyleBook1: TStyleBook;
-    ListaCategorias: TListBox;
-    Seletor: TImage;
-    Lay_sem_categorias: TLayout;
-    Image_sem_categorias: TImage;
-    Label_sem_categorias: TLabel;
-    SearchBox1: TSearchBox;
     botao_ajuda: TImage;
+    Seletor: TImage;
+    StyleBook1: TStyleBook;
     ValidaCategoria: TTimer;
-    procedure FormShow(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
     procedure Botao_voltarClick(Sender: TObject);
-    procedure AnimaStatusFinish(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure Btn_SelecionaClick(Sender: TObject);
+    procedure Ed_pesquisaTyping(Sender: TObject);
     Procedure MontaListaExibe;
     Procedure MontaListaSeleciona;
-    procedure Ed_pesquisaTyping(Sender: TObject);
     procedure Btn_Add_tarefaClick(Sender: TObject);
-    procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char;
-      Shift: TShiftState);
-    procedure Btn_SelecionaClick(Sender: TObject);
+    procedure Btn_apaga_categoriaClick(Sender: TObject);
+    procedure Btn_OKClick(Sender: TObject);
     procedure ListaCategoriasItemClick(const Sender: TCustomListBox;
       const Item: TListBoxItem);
     procedure ListaImagemCategoriaItemClick(const Sender: TCustomListBox;
       const Item: TListBoxItem);
-    procedure Btn_OKClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure Btn_apaga_categoriaClick(Sender: TObject);
     procedure ValidaCategoriaTimer(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
+    FBtnVoltarClick : TProc;
     fTipoAcao  : tipo_acao;
     FCat_id    : string;
     FCategoria : string;
@@ -110,60 +84,41 @@ type
     Loading     : iViewDialogsFactory;
   public
     { Public declarations }
+    Function Exibir : TLayout;
+    Function BtnVoltarClick (value: tproc): twindows_categories;
     Procedure Acao (Acao : tipo_acao); overload;
     Function Acao : tipo_acao; overload;
     Function Cat_id : string;
     Function Categoria : string;
     Function cat_icon : string;
+    Function Modo : TModalResult;
   end;
 
 var
-  Tela_categorias: TTela_categorias;
+  Windows_Categories: TWindows_Categories;
 
 implementation
 
+uses
+  eTasks.view.categorias, eTasks.Controller.Interfaces, eTasks.libraries,
+  eTasks.View.Windows.main, eTasks.Controller.Factory,
+  eTasks.libraries.Imagens64, eTasks.View.Dialogs.Messages.Consts;
+
 {$R *.fmx}
 
-{ TTela_categorias }
+{ TWindows_Categories }
 
-Uses
-  //Required units
-  FMX.platform,
-  FMX.VirtualKeyboard,
-  //Unit para pegar categorias JSON
-  eTasks.view.categorias,
-  //Units controller
-  eTasks.Controller.Interfaces,
-  eTasks.Controller.Factory,
-  //Units de library
-  eTasks.libraries.Imagens64,
-  eTasks.libraries,
-  eTasks.View.Dialogs.Messages.Consts;
+function TWindows_Categories.Acao: tipo_acao;
+begin
+  result := fTipoAcao;
+end;
 
-procedure TTela_categorias.Acao(Acao: tipo_acao);
+procedure TWindows_Categories.Acao(Acao: tipo_acao);
 begin
   FTipoAcao := Acao;
 end;
 
-function TTela_categorias.Acao: tipo_acao;
-begin
-   result := fTipoAcao;
-end;
-
-procedure TTela_categorias.AnimaStatusFinish(Sender: TObject);
-begin
-  if AnimaStatus.Inverse = False then
-   begin
-    AnimaStatus.Inverse := true;
-   end
-  else
-   begin
-    AnimaStatus.Inverse := false;
-    ModalResult := FModo;
-   end;
-end;
-
-procedure TTela_categorias.Botao_voltarClick(Sender: TObject);
+procedure TWindows_Categories.Botao_voltarClick(Sender: TObject);
 begin
   if TabCategorias.ActiveTab = TabEditaCategoria then
    begin
@@ -180,11 +135,17 @@ begin
   else
    begin
      FModo := mrCancel;
-     AnimaStatus.Start;
+     FBtnVoltarClick;
    end;
 end;
 
-procedure TTela_categorias.Btn_Add_tarefaClick(Sender: TObject);
+function TWindows_Categories.BtnVoltarClick(value: tproc): twindows_categories;
+begin
+  Result := Self;
+  FBtnVoltarClick := value;
+end;
+
+procedure TWindows_Categories.Btn_Add_tarefaClick(Sender: TObject);
 begin
   ValidaCategoria.Enabled := True;;
   Edit_categoria.Text := '';
@@ -198,14 +159,15 @@ begin
   TabCategorias.GotoVisibleTab(1);
 end;
 
-procedure TTela_categorias.Btn_apaga_categoriaClick(Sender: TObject);
+procedure TWindows_Categories.Btn_apaga_categoriaClick(Sender: TObject);
 Var
  Erro      : string;
  FMensagem : tTipoMensagem;
 begin
   Dialogs := tviewDialogsMessages.New;
-  Tela_categorias.AddObject(
-    Dialogs.DialogYesNo
+  Form_windows_main.AddObject(
+    Dialogs.Pai(Form_Windows_Main)
+      .DialogYesNo
              .Messagem('Tem certeza que deseja apagar esta categoria?')
              .BtnYes(Procedure ()
                      begin
@@ -214,7 +176,8 @@ begin
                       teTasksLibrary.CustomThread(Procedure ()
                                                   begin
                                                    Loading := tviewDialogsMessages.New;
-                                                   Tela_categorias.AddObject(Loading.Loading
+                                                   Form_Windows_Main.AddObject(Loading.Pai(Form_Windows_Main)
+                                                                               .Loading
                                                                              .Mensagem('Aguarde ... Apagando categoria ...')
                                                                              .AcaoLimpa(Procedure ()
                                                                                         begin
@@ -236,8 +199,9 @@ begin
                                                    if erro = '' then
                                                     begin
                                                      Dialogs := tviewdialogsmessages.New;
-                                                     Tela_categorias.AddObject(
-                                                           Dialogs.DialogMessages
+                                                     Form_Windows_Main.AddObject(
+                                                           Dialogs.Pai(Form_Windows_Main)
+                                                             .DialogMessages
                                                                     .TipoMensagem(FMensagem)
                                                                     .AcaoBotao(Procedure ()
                                                                                begin
@@ -282,7 +246,7 @@ begin
   );
 end;
 
-procedure TTela_categorias.Btn_OKClick(Sender: TObject);
+procedure TWindows_Categories.Btn_OKClick(Sender: TObject);
 Var
  Erro      : string;
  FMensagem : tTipoMensagem;
@@ -296,7 +260,8 @@ begin
                                  Editar : msg := 'Aguarde ... Salvando modificações ...';
                                  Inserir: msg := 'Aguarde ... Criando categoria ...' ;
                                end;
-                               Tela_categorias.AddObject(Loading.Loading
+                               Form_Windows_Main.AddObject(Loading.Pai(Form_Windows_Main)
+                                                              .Loading
                                                                   .Mensagem(msg)
                                                                   .AcaoLimpa(Procedure ()
                                                                              begin
@@ -331,8 +296,9 @@ begin
                                if erro = '' then
                                 begin
                                  Dialogs := tviewdialogsmessages.New;
-                                 Tela_categorias.AddObject(
-                                                           Dialogs.DialogMessages
+                                 Form_windows_main.AddObject(
+                                                           Dialogs.Pai(Form_Windows_Main)
+                                                              .DialogMessages
                                                                     .TipoMensagem(FMensagem)
                                                                     .AcaoBotao(Procedure ()
                                                                                begin
@@ -368,80 +334,38 @@ begin
                               end);
 end;
 
-procedure TTela_categorias.Btn_SelecionaClick(Sender: TObject);
+procedure TWindows_Categories.Btn_SelecionaClick(Sender: TObject);
 begin
   FModo := mrOk;
-  AnimaStatus.Start;
+  FBtnVoltarClick;
 end;
 
-function TTela_categorias.Categoria: string;
+procedure TWindows_Categories.Button1Click(Sender: TObject);
+begin
+  FBtnVoltarClick;
+end;
+
+function TWindows_Categories.Categoria: string;
 begin
   Result := FCategoria;
 end;
 
-function TTela_categorias.cat_icon: string;
+function TWindows_Categories.cat_icon: string;
 begin
   Result := FCat_icon;
 end;
 
-function TTela_categorias.Cat_id: string;
+function TWindows_Categories.Cat_id: string;
 begin
   Result := FCat_id;
 end;
 
-procedure TTela_categorias.Ed_pesquisaTyping(Sender: TObject);
+procedure TWindows_Categories.Ed_pesquisaTyping(Sender: TObject);
 begin
   SearchBox1.Text := Ed_pesquisa.Text;
 end;
 
-procedure TTela_categorias.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  //Action := TCloseAction.caFree;
-  //Tela_categorias := nil;
-end;
-
-procedure TTela_categorias.FormCreate(Sender: TObject);
-begin
-  TCategorias.New.MontaListagem(ListaImagemCategoria);
-end;
-
-procedure TTela_categorias.FormKeyUp(Sender: TObject; var Key: Word;
-  var KeyChar: Char; Shift: TShiftState);
-Var
-  FService : iFMXVirtualKeyboardService;
-begin
-   if (Key = vkHardwareBack) then
-    begin
-      TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, IInterface(FService));
-      if (FService <> Nil) and (TVirtualKeyboardState.Visible in FService.VirtualKeyboardState) then
-       begin
-         // Botão BACK pressionado e teclado vísivel, apenas fecha o teclado
-       end
-      else
-       begin
-         if (Assigned(Dialogs)) or (Assigned(Loading)) then
-          begin
-            Key := 0;
-            if Assigned(dialogs) then
-             begin
-              dialogs.DialogMessages.Fechar;
-             end;
-          end
-         else
-          begin
-           if TabCategorias.ActiveTab = TabEditaCategoria then
-            begin
-             Key := 0;
-             Botao_voltarClick(sender);
-            end
-          else
-           AnimaStatus.Start;
-          end;
-       end;
-    end;
-end;
-
-procedure TTela_categorias.FormShow(Sender: TObject);
+function TWindows_Categories.Exibir: TLayout;
 begin
   Seletor.Parent   := Self;
   Seletor.Visible  := False;
@@ -456,10 +380,15 @@ begin
     taSelecionar : MontaListaSeleciona;
     taListar     : MontaListaExibe;
   end;
-  AnimaStatus.Start;
+  Result := Lay_main;
 end;
 
-procedure TTela_categorias.ListaCategoriasItemClick(
+procedure TWindows_Categories.FormCreate(Sender: TObject);
+begin
+  TCategorias.New.MontaListagem(ListaImagemCategoria);
+end;
+
+procedure TWindows_Categories.ListaCategoriasItemClick(
   const Sender: TCustomListBox; const Item: TListBoxItem);
 Var
   I : integer;
@@ -493,14 +422,19 @@ begin
  end;
 end;
 
-procedure TTela_categorias.ListaImagemCategoriaItemClick(
+procedure TWindows_Categories.ListaImagemCategoriaItemClick(
   const Sender: TCustomListBox; const Item: TListBoxItem);
 begin
   Seletor.Parent := Item;
   FCat_icon      := Item.TagString;
 end;
 
-procedure TTela_categorias.MontaListaExibe;
+function TWindows_Categories.Modo: TModalResult;
+begin
+ Result := FModo;
+end;
+
+procedure TWindows_Categories.MontaListaExibe;
 Var
  Categorias : iControllerCategorias;
  erro: string;
@@ -508,7 +442,7 @@ begin
   teTasksLibrary.CustomThread(Procedure ()
                               begin
                                Loading := tViewDialogsMessages.New;
-                               Tela_categorias.AddObject(Loading.Loading
+                               form_windows_main.AddObject(Loading.Pai(form_windows_main).Loading
                                                                   .Mensagem('Buscando categorias ...')
                                                                   .AcaoLimpa(Procedure ()
                                                                              begin
@@ -566,7 +500,7 @@ begin
                               end);
 end;
 
-procedure TTela_categorias.MontaListaSeleciona;
+procedure TWindows_Categories.MontaListaSeleciona;
 Var
  Categorias : iControllerCategorias;
  erro: string;
@@ -574,7 +508,7 @@ begin
   teTasksLibrary.CustomThread(Procedure ()
                               begin
                                Loading := tViewDialogsMessages.New;
-                               Tela_categorias.AddObject(Loading.Loading
+                               Form_windows_main.AddObject(Loading.Pai(form_windows_main).Loading
                                                                   .Mensagem('Buscando categorias ...')
                                                                   .AcaoLimpa(Procedure ()
                                                                              begin
@@ -639,7 +573,7 @@ begin
                               end);
 end;
 
-procedure TTela_categorias.ValidaCategoriaTimer(Sender: TObject);
+procedure TWindows_Categories.ValidaCategoriaTimer(Sender: TObject);
 begin
   Btn_OK.Enabled := not Edit_categoria.Text.IsEmpty;
 end;

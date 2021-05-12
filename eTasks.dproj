@@ -6,7 +6,7 @@
         <MainSource>eTasks.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>32787</TargetedPlatforms>
         <AppType>Application</AppType>
     </PropertyGroup>
@@ -130,6 +130,8 @@
         <AUP_CALL_PHONE>false</AUP_CALL_PHONE>
         <EL_SecureFileSharing>true</EL_SecureFileSharing>
         <AUP_READ_PHONE_STATE>false</AUP_READ_PHONE_STATE>
+        <Android_AppId>1:164825974763:android:83f87676e52c0e3822bbae</Android_AppId>
+        <Android_GcmDefaultSenderId>164825974763</Android_GcmDefaultSenderId>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android64)'!=''">
         <DCC_UsePackage>DBXSqliteDriver;RESTComponents;ZComponent;DBXInterBaseDriver;ZCore;tethering;bindcompfmx;FmxTeeUI;fmx;FireDACIBDriver;dbexpress;IndyCore;ZParseSql;dsnap;FireDACCommon;RESTBackendComponents;soapserver;bindengine;CloudService;FireDACCommonDriver;inet;IndyIPCommon;bindcompdbx;IndyIPServer;IndySystem;fmxFireDAC;FireDAC;ZDbc;FireDACSqliteDriver;ibmonitor;FMXTee;soaprtl;DbxCommonDriver;ibxpress;xmlrtl;soapmidas;ibxbindings;rtl;DbxClientDriver;CustomIPTransport;bindcomp;ZPlain;IndyIPClient;dbxcds;dsnapxml;dbrtl;IndyProtocols;$(DCC_UsePackage)</DCC_UsePackage>
@@ -190,13 +192,8 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Android)'!=''">
         <VerInfo_Build>1</VerInfo_Build>
-        <Android_SplashImage426>Imagens\SplashScreens\eTasks_426x320.9.png</Android_SplashImage426>
-        <Android_SplashImage470>Imagens\SplashScreens\eTasks_470x320.9.png</Android_SplashImage470>
-        <Android_SplashImage640>Imagens\SplashScreens\eTasks_640x480.9.png</Android_SplashImage640>
-        <Android_SplashImage960>Imagens\SplashScreens\e_tasks_960x720.9.png</Android_SplashImage960>
         <AUP_READ_PHONE_STATE>false</AUP_READ_PHONE_STATE>
-        <Android_AppId>1:164825974763:android:d63a54c130623c2822bbae</Android_AppId>
-        <Android_GcmDefaultSenderId>164825974763</Android_GcmDefaultSenderId>
+        <VerInfo_Keys>package=br.devpegasus.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.1;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=No TitleBar;hardwareAccelerated=true;apiKey=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
@@ -242,6 +239,8 @@
             <Form>Form_Windows_Ajuda</Form>
         </DCCReference>
         <DCCReference Include="Source\View\Windows\eTasks.View.Windows.Telas.pas"/>
+        <DCCReference Include="Source\View\Windows\eTasks.View.Windows.tasks.pas"/>
+        <DCCReference Include="Source\View\Windows\eTasks.View.Windows.Categories.pas"/>
         <DCCReference Include="Source\View\Dialogs\eTasks.View.Dialogs.SheetFotos.pas">
             <Form>Sheet_fotos</Form>
         </DCCReference>
@@ -321,6 +320,12 @@
                 </Source>
             </Delphi.Personality>
             <Deployment Version="3">
+                <DeployFile LocalName="Win64\Debug\eTasks.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>eTasks.rsm</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_48x48.png" Configuration="Debug" Class="Android_NotificationIcon48">
                     <Platform Name="Android64">
                         <RemoteName>ic_notification.png</RemoteName>
@@ -428,12 +433,6 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="C:\Meus Projetos\eTasks\Imagens\Icones\Logo_48.png" Configuration="Debug" Class="Android_LauncherIcon48">
-                    <Platform Name="Android">
-                        <RemoteName>ic_launcher.png</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="$(BDS)\bin\Artwork\Android\FM_NotificationIcon_24x24.png" Configuration="Debug" Class="Android_NotificationIcon24">
                     <Platform Name="Android64">
                         <RemoteName>ic_notification.png</RemoteName>
@@ -442,6 +441,12 @@
                 </DeployFile>
                 <DeployFile LocalName="Android64\Debug\styles.xml" Configuration="Debug" Class="AndroidSplashStyles">
                     <Platform Name="Android64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Meus Projetos\eTasks\Imagens\Icones\Logo_48.png" Configuration="Debug" Class="Android_LauncherIcon48">
+                    <Platform Name="Android">
+                        <RemoteName>ic_launcher.png</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

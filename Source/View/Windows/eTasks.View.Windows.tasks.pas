@@ -1,4 +1,4 @@
-unit eTasks.View.Android.tasks;
+unit eTasks.View.Windows.tasks;
 
 interface
 
@@ -13,39 +13,34 @@ uses
   FMX.Forms,
   FMX.Graphics,
   FMX.Dialogs,
-  FMX.Controls.Presentation,
-  FMX.StdCtrls, FMX.Layouts,
-  FMX.TabControl,
-  FMX.Objects,
+  FMX.Layouts,
   FMX.ListView.Types,
   FMX.ListView.Appearances,
   FMX.ListView.Adapters.Base,
-  FMX.ListView,
   FMX.Ani,
-  //eTasks - View dialogs factory
-  eTasks.View.Dialogs.Factory, FMX.Effects, FMX.Edit, FMX.ScrollBox, FMX.Memo;
+  FMX.ScrollBox,
+  FMX.Memo,
+  FMX.Edit,
+  FMX.Effects,
+  FMX.Objects,
+  FMX.ListView,
+  FMX.Controls.Presentation,
+  FMX.StdCtrls,
+  FMX.TabControl,
+  eTasks.View.Dialogs.Factory,
+  eTasks.View.Windows.Categories;
 
 type
   tipo_acao = (taNovo, taEditar, taExibe, taLista);
 
-  Telas = (TelaCategorias);
-
   Modos = (mEditar, mInserir);
 
-  TTela_Tarefas = class(TForm)
+  TWindows_tasks = class(TForm)
+    Img_Afazer: TImage;
+    Img_Concluido: TImage;
     Lay_main: TLayout;
     TabTarefas: TTabControl;
     TabListaTarefa: TTabItem;
-    TabExibeTarefa: TTabItem;
-    TabNovoEditaTarefa: TTabItem;
-    ToolBar_container: TLayout;
-    ToolBar: TLayout;
-    Linha_titulo: TLine;
-    Botao_voltar: TImage;
-    botao_ajuda: TImage;
-    title_MinhasTarefas: TImage;
-    title_EditaTarefa: TImage;
-    title_NovaTarefa: TImage;
     Lay_Topo_lista: TLayout;
     Lay_data_select: TLayout;
     Btn_Volta_data: TImage;
@@ -56,11 +51,8 @@ type
     ListaVaziaFundo: TRectangle;
     Image_sem_tarefas: TImage;
     Label_sem_tarefas: TLabel;
-    Img_Afazer: TImage;
-    Img_Concluido: TImage;
-    RecStatus: TRectangle;
-    AnimaStatus: TFloatAnimation;
     Btn_Add_tarefa: TImage;
+    TabExibeTarefa: TTabItem;
     Btn_apaga_task: TImage;
     Btn_edita_task: TImage;
     Lay_container_tarefa: TLayout;
@@ -77,11 +69,12 @@ type
     Linha_data_exibe: TLine;
     Lbl_data_exibe: TLabel;
     Lay_container_descricao_exibe: TLayout;
+    Label_descricao: TLabel;
     Lay_container_categoria: TLayout;
     Img_Categoria_exibe: TImage;
     Label_categoria: TLabel;
     Label_data_exibe: TLabel;
-    Label_descricao: TLabel;
+    TabNovoEditaTarefa: TTabItem;
     Btn_OK: TImage;
     Lay_tarefa: TLayout;
     Lay_tarefa_container: TLayout;
@@ -96,6 +89,7 @@ type
     Lay_descricao_edit_cont: TLayout;
     Rect_descricao: TRectangle;
     sombra_descrcao_container: TShadowEffect;
+    Ed_descricao: TMemo;
     Lay_categoria_edit: TLayout;
     Linha_categoria_edit: TLine;
     Label_categoria_edit: TLabel;
@@ -109,8 +103,6 @@ type
     Lay_data_edit: TLayout;
     Linha_data_edit: TLine;
     Label_data_edit: TLabel;
-    Ed_descricao: TMemo;
-    Estilo_tasks: TStyleBook;
     Lay_data_edit_container: TLayout;
     lay_container_data_edit: TLayout;
     Btn_data: TRectangle;
@@ -118,42 +110,45 @@ type
     Img_data: TImage;
     img_btn_data_abre: TImage;
     Label_data_btn: TLabel;
+    ToolBar_container: TLayout;
+    ToolBar: TLayout;
+    Linha_titulo: TLine;
+    Botao_voltar: TImage;
+    botao_ajuda: TImage;
+    title_MinhasTarefas: TImage;
+    title_EditaTarefa: TImage;
+    title_NovaTarefa: TImage;
     Rect_abrir_categorias: TRectangle;
     ShadowEffect2: TShadowEffect;
     AnimaTelaCategorias: TFloatAnimation;
+    Estilo_tasks: TStyleBook;
     ValidaTarefa: TTimer;
-    procedure FormShow(Sender: TObject);
-    procedure Botao_voltarClick(Sender: TObject);
-    procedure AnimaStatusFinish(Sender: TObject);
-    procedure Btn_Avanca_dataClick(Sender: TObject);
-    procedure Btn_Volta_dataClick(Sender: TObject);
+    Lay_container: TLayout;
     procedure Label_DataClick(Sender: TObject);
-    procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: Char;
-      Shift: TShiftState);
-    procedure Btn_statusClick(Sender: TObject);
-    procedure Btn_dataClick(Sender: TObject);
-    procedure AnimaTelaCategoriasFinish(Sender: TObject);
-    procedure Btn_categoriaClick(Sender: TObject);
+    procedure Btn_Volta_dataClick(Sender: TObject);
+    procedure Btn_Avanca_dataClick(Sender: TObject);
+    procedure Botao_voltarClick(Sender: TObject);
+    procedure Btn_Add_tarefaClick(Sender: TObject);
     procedure ListaTarefasItemClickEx(const Sender: TObject; ItemIndex: Integer;
       const LocalClickPos: TPointF; const ItemObject: TListItemDrawable);
-    procedure Btn_Add_tarefaClick(Sender: TObject);
-    procedure TabTarefasChange(Sender: TObject);
+    procedure Btn_statusClick(Sender: TObject);
     procedure Btn_edita_taskClick(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure Btn_apaga_taskClick(Sender: TObject);
+    procedure Btn_OKClick(Sender: TObject);
+    procedure Btn_dataClick(Sender: TObject);
+    procedure Btn_categoriaClick(Sender: TObject);
     procedure Ed_descricaoEnter(Sender: TObject);
     procedure Ed_descricaoExit(Sender: TObject);
+    procedure Lay_mainResize(Sender: TObject);
+    procedure AnimaTelaCategoriasFinish(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure ValidaTarefaTimer(Sender: TObject);
-    procedure Btn_OKClick(Sender: TObject);
     procedure Edit_tarefaExit(Sender: TObject);
-    procedure Btn_apaga_taskClick(Sender: TObject);
+    procedure Edit_tarefaChange(Sender: TObject);
+    procedure Edit_tarefaTyping(Sender: TObject);
   private
     { Private declarations }
-    {FKBBounds: TRectF;
-    FNeedOffset: Boolean;
-    procedure CalcContentBoundsProc(Sender: TObject;
-                                    var ContentBounds: TRectF);
-    procedure RestorePosition;
-    procedure UpdateKBBounds;}
+    FBtnVoltarClick : TProc;
     Fid        : string;
     FTarefa    : string;
     FDescricao : string;
@@ -163,66 +158,60 @@ type
     Fcat_id    : string;
     Fcat_icon  : string;
     FTipoAcao  : tipo_acao;
-    FTelas     : Telas;
     FModo      : Modos;
     FMain      : Boolean;
     FBack      : Boolean;
     Dialogs    : iViewDialogsFactory;
     Loading    : iViewDialogsFactory;
     FCalendar  : iViewDialogsFactory;
+    FTela_Categorias : TWindows_Categories;
     Procedure Add_tarefa (id, Status, tarefa, descricao: string; categoria: string);
     Procedure ListarTarefas(Data : string);
     Procedure AtualizaListaTarefas(Data : string);
-    Procedure AbreTela (Tela : Telas);
+    Procedure AbreTelaCategorias;
     Procedure EditarTarefa(Main : Boolean);
     Procedure NovaTarefa(Main : Boolean);
     Procedure ExibeTarefa(Main : Boolean);
   public
     { Public declarations }
+    Function Exibir : TLayout;
+    Function BtnVoltarClick(Value : tProc) : Twindows_tasks;
     Procedure Acao (Acao : tipo_acao);
     Procedure ID (value : string);
   end;
 
 var
-  Tela_Tarefas: TTela_Tarefas;
+  Windows_tasks: TWindows_tasks;
 
 implementation
 
 uses
-  //Required units
-  FMX.platform,
-  FMX.VirtualKeyboard,
-  //eTasks - Controller units
-  eTasks.Controller.Interfaces,
-  eTasks.Controller.Factory,
-  //eTasks - Libraries
-  eTasks.libraries.Android,
   eTasks.libraries.Imagens64,
-  eTasks.libraries,
   eTasks.view.categorias,
-  //eTasks - Form de Categorias
-  eTasks.View.Android.categories,
-  //eTasks - constantes de mensagens
+  eTasks.Controller.Interfaces,
+  eTasks.libraries,
+  eTasks.View.Windows.main,
+  eTasks.Controller.Factory,
   eTasks.View.Dialogs.Messages.Consts;
 
 {$R *.fmx}
 
-procedure TTela_Tarefas.AbreTela(Tela: Telas);
+{ TWindows_tasks }
+
+procedure TWindows_tasks.AbreTelaCategorias;
 begin
-  FTelas := Tela;
   AnimaTelaCategorias.Start;
 end;
 
-procedure TTela_Tarefas.Acao(Acao: tipo_acao);
+procedure TWindows_tasks.Acao(Acao: tipo_acao);
 begin
   FTipoAcao := Acao;
 end;
 
-procedure TTela_Tarefas.Add_tarefa(id, Status, tarefa, descricao,
+procedure TWindows_tasks.Add_tarefa(id, Status, tarefa, descricao,
   categoria: string);
 Var
  img : TBitmap;
- picture : TImage;
 begin
   with ListaTarefas.Items.Add do
   begin
@@ -242,68 +231,57 @@ begin
     TListItemText(Objects.FindDrawable('txt_description')).Text := descricao;
 
     img := TImagens64.fromBase64(tcategorias.New.PegaImagem(categoria));
-    picture := TImage.Create(nil);
+
     try
      TListItemImage(Objects.FindDrawable('img_category')).OwnsBitmap := True;
-     picture.Bitmap := img;
-     TListItemImage(Objects.FindDrawable('img_category')).Bitmap := picture.Bitmap;
-     img.disposeof;
+
+     TListItemImage(Objects.FindDrawable('img_category')).Bitmap := img;
+
     finally
-     picture.DisposeOf;
+
     end;
 
     TagString := id;
   end;
 end;
 
-procedure TTela_Tarefas.AnimaStatusFinish(Sender: TObject);
+procedure TWindows_tasks.AnimaTelaCategoriasFinish(Sender: TObject);
 begin
-  if AnimaStatus.Inverse = False then
+  if (AnimaTelaCategorias.Inverse = false) then
    begin
-    AnimaStatus.Inverse := true;
-   end
-  else
-   begin
-    AnimaStatus.Inverse := false;
-    ModalResult := mrOk;
-   end;
-end;
-
-procedure TTela_Tarefas.AnimaTelaCategoriasFinish(Sender: TObject);
-begin
-  if AnimaTelaCategorias.Inverse = false then
-   begin
-     AnimaTelaCategorias.Inverse := True;
-     case FTelas of
-      TelaCategorias : begin
-                          if not Assigned(Tela_categorias) then
-                            Application.CreateForm(TTela_categorias, Tela_categorias);
-                          Tela_Categorias.Acao(taSelecionar);
-                          Tela_Categorias.ShowModal(Procedure (ModalResult: TModalResult)
-                                                    var
-                                                     bitmap : TBitmap;
-                                                    Begin
-                                                     AnimaTelaCategorias.Start;
-                                                     if ModalResult = mrOk then
-                                                      begin
-                                                        bitmap := TImagens64.fromBase64(TCategorias.New.PegaImagem(Tela_categorias.cat_icon));
-                                                        FCategoria := Tela_categorias.Categoria;
-                                                        Fcat_id    := Tela_categorias.Cat_id;
-                                                        Fcat_icon  := Tela_categorias.cat_icon;
-                                                        Label_categoria_btn.Text := FCategoria;
-                                                        Img_categoria_btn.Bitmap := bitmap;
-                                                        Img_categoria_btn.Visible := true;
-                                                        bitmap.DisposeOf;
-                                                      end;
-                                                    End);
-                       end;
-     end;
+    AnimaTelaCategorias.Inverse := true;
+    FTela_Categorias := TWindows_Categories.Create(nil);
+    FTela_Categorias.Acao(taSelecionar);
+    Lay_container.AddObject(
+                            FTela_Categorias
+                                 .BtnVoltarClick(
+                                                 Procedure ()
+                                                 var
+                                                  bitmap : TBitmap;
+                                                 Begin
+                                                   AnimaTelaCategorias.Start;
+                                                   Lay_container.RemoveObject(0);
+                                                   if FTela_Categorias.Modo = mrOk then
+                                                    begin
+                                                     bitmap := TImagens64.fromBase64(TCategorias.New.PegaImagem(FTela_Categorias.cat_icon));
+                                                     FCategoria := FTela_Categorias.Categoria;
+                                                     Fcat_id    := FTela_Categorias.Cat_id;
+                                                     Fcat_icon  := FTela_Categorias.cat_icon;
+                                                     Label_categoria_btn.Text := FCategoria;
+                                                     Img_categoria_btn.Bitmap := bitmap;
+                                                     Img_categoria_btn.Visible := true;
+                                                     bitmap.DisposeOf;
+                                                    end;
+                                                 end
+                                                 )
+                                 .exibir
+                              );
    end
   else
    AnimaTelaCategorias.Inverse := False;
 end;
 
-procedure TTela_Tarefas.AtualizaListaTarefas(Data: string);
+procedure TWindows_tasks.AtualizaListaTarefas(Data: string);
 Var
   erro : string;
   Tarefas : iControllerTarefas;
@@ -312,7 +290,7 @@ begin
   teTasksLibrary.CustomThread(Procedure()
                               begin
                                 Loading := tviewdialogsmessages.New;
-                                Tela_tarefas.AddObject(
+                                Form_windows_main.AddObject(
                                                              Loading.Loading
                                                                       .Mensagem('Buscando tarefas. Aguarde, por favor... ')
                                                                       .AcaoLimpa(Procedure()
@@ -331,34 +309,22 @@ begin
                                tarefa : TTarefa;
                               begin
                                 loading.Loading.Fechar;
-                                if erro = '' then
+                                listaTarefas.Items.Clear;
+                                Lay_Lista_vazia.Visible := False;
+                                if Tarefas.ListagemdeTarefas.Count <> 0 then
                                  begin
-                                  listaTarefas.Items.Clear;
-                                  Lay_Lista_vazia.Visible := False;
-                                  if Tarefas.ListagemdeTarefas.Count <> 0 then
-                                   begin
-                                    ListaTarefas.BeginUpdate;
-                                    for Tarefa in Tarefas.ListagemdeTarefas.Values do
-                                     Add_tarefa(Tarefa.id, Tarefa.status, Tarefa.tarefa, Tarefa.descricao, Tarefa.Cat_icon);
-                                    ListaTarefas.EndUpdate;
-                                   end
-                                  else
-                                   Lay_Lista_vazia.Visible := True;
+                                   ListaTarefas.BeginUpdate;
+                                   for Tarefa in Tarefas.ListagemdeTarefas.Values do
+                                    Add_tarefa(Tarefa.id, Tarefa.status, Tarefa.tarefa, Tarefa.descricao, Tarefa.Cat_icon);
+                                   ListaTarefas.EndUpdate;
                                  end
                                 else
-                                 begin
-                                   if erro = 'vazio' then
-                                    Begin
-                                      ListaTarefas.Items.Clear;
-                                      Lay_Lista_vazia.Visible := True;
-                                    End;
-                                 end;
+                                 Lay_Lista_vazia.Visible := True;
                               end);
 end;
 
-procedure TTela_Tarefas.Botao_voltarClick(Sender: TObject);
+procedure TWindows_tasks.Botao_voltarClick(Sender: TObject);
 begin
-  //ModalResult := mrOk;
   if (FMain = true) then
    begin
      if (TabTarefas.ActiveTab = TabNovoEditaTarefa) and (FBack = true) then
@@ -367,7 +333,7 @@ begin
        ValidaTarefa.Enabled := false;
       end
      else
-      AnimaStatus.Start;
+      FBtnVoltarClick;
    end
   else
    begin
@@ -384,26 +350,32 @@ begin
        if TabTarefas.ActiveTab = TabExibeTarefa then
         TabTarefas.GotoVisibleTab(TabListaTarefa.Index)
        else
-        AnimaStatus.Start;
+        FBtnVoltarClick;
       end;
    end;
 end;
 
-procedure TTela_Tarefas.Btn_Add_tarefaClick(Sender: TObject);
+function TWindows_tasks.BtnVoltarClick(Value: tProc): Twindows_tasks;
+begin
+  Result := Self;
+  FBtnVoltarClick := value;
+end;
+
+procedure TWindows_tasks.Btn_Add_tarefaClick(Sender: TObject);
 begin
   FModo := mInserir;
   NovaTarefa(false);
 end;
 
-procedure TTela_Tarefas.Btn_apaga_taskClick(Sender: TObject);
+procedure TWindows_tasks.Btn_apaga_taskClick(Sender: TObject);
 Var
  erro      : string;
  FMensagem : tTipoMensagem;
 begin
  Dialogs := TViewDialogsMessages.New;
- Tela_Tarefas
+ Form_Windows_Main
   .AddObject(
-             Dialogs
+             Dialogs.Pai(Form_Windows_Main)
               .DialogYesNo
                 .Messagem('Tem certeza que deseja apagar esta tarefa?')
                 .BtnYes(
@@ -416,9 +388,9 @@ begin
                                          procedure ()
                                          Begin
                                           Loading := TViewDialogsMessages.New;
-                                          Tela_Tarefas
+                                          Form_Windows_Main
                                            .AddObject(
-                                                      Loading
+                                                      Loading.Pai(Form_Windows_Main)
                                                        .Loading
                                                          .Mensagem('Aguarde... Apagando tarefa!')
                                                          .AcaoLimpa(
@@ -445,9 +417,9 @@ begin
                                           if erro = '' then
                                            begin
                                             Dialogs := TViewDialogsMessages.New;
-                                            Tela_Tarefas
+                                            Form_Windows_Main
                                              .AddObject(
-                                                        Dialogs
+                                                        Dialogs.Pai(Form_Windows_Main)
                                                          .DialogMessages
                                                           .TipoMensagem(FMensagem)
                                                           .AcaoBotao(
@@ -455,7 +427,7 @@ begin
                                                                      begin
                                                                       Dialogs := nil;
                                                                       if FMain = true then
-                                                                       AnimaStatus.Start
+                                                                       FBtnVoltarClick
                                                                       else
                                                                        begin
                                                                         TabTarefas.GotoVisibleTab(TabListaTarefa.Index);
@@ -468,7 +440,7 @@ begin
                                                                      begin
                                                                       Dialogs := nil;
                                                                       if FMain = true then
-                                                                       AnimaStatus.Start
+                                                                       FBtnVoltarClick
                                                                       else
                                                                        begin
                                                                         TabTarefas.GotoVisibleTab(TabListaTarefa.Index);
@@ -499,29 +471,26 @@ begin
             );
 end;
 
-procedure TTela_Tarefas.Btn_Avanca_dataClick(Sender: TObject);
+procedure TWindows_tasks.Btn_Avanca_dataClick(Sender: TObject);
 begin
-   ListarTarefas(DateToStr(StrToDate(Label_Data.Text) + 1));
+  ListarTarefas(DateToStr(StrToDate(Label_Data.Text) + 1));
 end;
 
-procedure TTela_Tarefas.Btn_categoriaClick(Sender: TObject);
+procedure TWindows_tasks.Btn_categoriaClick(Sender: TObject);
 begin
-  AbreTela(TelaCategorias);
+  Rect_abrir_categorias.Width := Lay_main.Width + 45;
+  Rect_abrir_categorias.Height := Lay_main.Height;
+  Rect_abrir_categorias.Position.X := - (Rect_abrir_categorias.Width);
+  AbreTelaCategorias;
 end;
 
-procedure TTela_Tarefas.Btn_dataClick(Sender: TObject);
-Var
- FService : IFMXVirtualKeyboardService;
+procedure TWindows_tasks.Btn_dataClick(Sender: TObject);
 begin
-  TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, IInterface(FService));
-  if (FService <> Nil) and (TVirtualKeyboardState.Visible in FService.VirtualKeyboardState) then
-   begin
-    FService.HideVirtualKeyboard;
-   end;
   FCalendar := TViewDialogsMessages.New;
   FData := DateToStr(now);
-  Tela_tarefas.AddObject(
-                               FCalendar.Calendar
+  Form_Windows_Main.AddObject(
+                               FCalendar.Pai(Form_Windows_Main)
+                                        .Calendar
                                             .Data(StrToDate(Fdata))
                                             .AcaoBotao(Procedure ()
                                                        begin
@@ -536,17 +505,19 @@ begin
                                             .Exibe);
 end;
 
-procedure TTela_Tarefas.Btn_edita_taskClick(Sender: TObject);
+procedure TWindows_tasks.Btn_edita_taskClick(Sender: TObject);
 begin
   FModo := mEditar;
   EditarTarefa(FMain);
 end;
 
-procedure TTela_Tarefas.Btn_OKClick(Sender: TObject);
+procedure TWindows_tasks.Btn_OKClick(Sender: TObject);
 Var
  Erro      : string;
  FMensagem : tTipoMensagem;
 begin
+  if Ed_descricao.Lines.Text <> 'Digite aqui uma descrição para a tarefa' then
+   FDescricao := Ed_descricao.Lines.Text;
   teTasksLibrary.CustomThread(
                               Procedure ()
                               var
@@ -557,8 +528,8 @@ begin
                                   mEditar:  msg := 'Aguarde... Salvando modificações!';
                                   mInserir: msg := 'Aguarde... Salvando nova tarefa!';
                                 end;
-                                Tela_Tarefas.AddObject(
-                                                       Loading
+                                Form_Windows_Main.AddObject(
+                                                       Loading.Pai(Form_Windows_Main)
                                                         .Loading
                                                          .Mensagem(msg)
                                                          .AcaoLimpa(
@@ -613,9 +584,9 @@ begin
                                 if Erro = '' then
                                  begin
                                    Dialogs := TViewDialogsMessages.New;
-                                   Tela_Tarefas
+                                   Form_Windows_Main
                                      .AddObject(
-                                                Dialogs
+                                                Dialogs.Pai(Form_Windows_Main)
                                                  .DialogMessages
                                                    .TipoMensagem(FMensagem)
                                                    .AcaoBotao(
@@ -624,7 +595,7 @@ begin
                                                                 Dialogs := nil;
                                                                 ValidaTarefa.Enabled := false;
                                                                 if (FMain = true) and (FModo = mInserir) then
-                                                                  AnimaStatus.Start;
+                                                                  FBtnVoltarClick;
                                                                 if (FMain = true) and (FModo = mEditar) then
                                                                  begin
                                                                   ExibeTarefa(false);
@@ -646,7 +617,7 @@ begin
                                                                 Dialogs := nil;
                                                                 ValidaTarefa.Enabled := false;
                                                                 if (FMain = true) and (FModo = mInserir) then
-                                                                  AnimaStatus.Start;
+                                                                  FBtnVoltarClick;
                                                                 if (FMain = true) and (FModo = mEditar) then
                                                                  begin
                                                                   ExibeTarefa(false);
@@ -670,7 +641,7 @@ begin
                              );
 end;
 
-procedure TTela_Tarefas.Btn_statusClick(Sender: TObject);
+procedure TWindows_tasks.Btn_statusClick(Sender: TObject);
 Var
   ErroStatus : string;
 begin
@@ -702,12 +673,12 @@ begin
    end;
 end;
 
-procedure TTela_Tarefas.Btn_Volta_dataClick(Sender: TObject);
+procedure TWindows_tasks.Btn_Volta_dataClick(Sender: TObject);
 begin
-  ListarTarefas(DateToStr(StrToDate(Label_Data.Text) - 1));
+   ListarTarefas(DateToStr(StrToDate(Label_Data.Text) - 1));
 end;
 
-procedure TTela_Tarefas.EditarTarefa(Main : Boolean);
+procedure TWindows_tasks.EditarTarefa(Main: Boolean);
 begin
   TabTarefas.GotoVisibleTab(TabNovoEditaTarefa.Index);
 
@@ -735,12 +706,22 @@ begin
 
 end;
 
-procedure TTela_Tarefas.Edit_tarefaExit(Sender: TObject);
+procedure TWindows_tasks.Edit_tarefaChange(Sender: TObject);
 begin
   FTarefa := Edit_tarefa.Text;
 end;
 
-procedure TTela_Tarefas.Ed_descricaoEnter(Sender: TObject);
+procedure TWindows_tasks.Edit_tarefaExit(Sender: TObject);
+begin
+  FTarefa := Edit_tarefa.Text;
+end;
+
+procedure TWindows_tasks.Edit_tarefaTyping(Sender: TObject);
+begin
+  FTarefa := Edit_tarefa.Text;
+end;
+
+procedure TWindows_tasks.Ed_descricaoEnter(Sender: TObject);
 begin
   if Ed_descricao.Lines.Text = 'Digite aqui uma descrição para a tarefa' then
    begin
@@ -749,7 +730,7 @@ begin
    end;
 end;
 
-procedure TTela_Tarefas.Ed_descricaoExit(Sender: TObject);
+procedure TWindows_tasks.Ed_descricaoExit(Sender: TObject);
 begin
   if Ed_descricao.Lines.Text = '' then
    begin
@@ -761,7 +742,7 @@ begin
    FDescricao := Ed_descricao.Lines.Text;
 end;
 
-procedure TTela_Tarefas.ExibeTarefa(Main : Boolean);
+procedure TWindows_tasks.ExibeTarefa(Main: Boolean);
 Var
   Erro    : string;
   Tarefas : iControllerTarefas;
@@ -804,80 +785,7 @@ begin
   bitmap.DisposeOf;
 end;
 
-procedure TTela_Tarefas.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  if Assigned(Tela_categorias) then
-   begin
-     Tela_categorias.DisposeOf;
-     Tela_categorias := nil;
-   end;
-  Action := TCloseAction.caFree;
-  Tela_Tarefas := nil;
-end;
-
-procedure TTela_Tarefas.FormKeyUp(Sender: TObject; var Key: Word;
-  var KeyChar: Char; Shift: TShiftState);
-Var
-  FService : iFMXVirtualKeyboardService;
-begin
-   if (Key = vkHardwareBack) then
-    begin
-      TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, IInterface(FService));
-      if (FService <> Nil) and (TVirtualKeyboardState.Visible in FService.VirtualKeyboardState) then
-       begin
-         // Botão BACK pressionado e teclado vísivel, apenas fecha o teclado
-       end
-      else
-       begin
-         if (Assigned(Dialogs)) or (Assigned(Loading)) or (Assigned(FCalendar)) then
-          begin
-            Key := 0;
-            if Assigned(dialogs) then
-             begin
-              dialogs.DialogMessages.Fechar;
-             end;
-            if Assigned(FCalendar) then
-             begin
-              FCalendar.Calendar.Fechar;
-             end;
-          end
-         else
-          begin
-           Key := 0;
-           if (FMain = true) then
-            begin
-             if (TabTarefas.ActiveTab = TabNovoEditaTarefa) and (FBack = true) then
-              begin
-               TabTarefas.GotoVisibleTab(TabExibeTarefa.Index);
-               ValidaTarefa.Enabled := false;
-              end
-             else
-              AnimaStatus.Start;
-            end
-           else
-            begin
-             if (TabTarefas.ActiveTab = TabNovoEditaTarefa) then
-              begin
-               if FModo = mEditar then
-                TabTarefas.GotoVisibleTab(TabExibeTarefa.Index)
-               else
-                TabTarefas.GotoVisibleTab(TabListaTarefa.Index);
-               ValidaTarefa.Enabled := false;
-              end
-             else
-              begin
-               if TabTarefas.ActiveTab = TabExibeTarefa then
-                TabTarefas.GotoVisibleTab(TabListaTarefa.Index)
-               else
-                AnimaStatus.Start;
-              end;
-            end;
-          end;
-       end;
-    end;
-end;
-
-procedure TTela_Tarefas.FormShow(Sender: TObject);
+function TWindows_tasks.Exibir: TLayout;
 begin
   case FTipoAcao of
     taNovo: begin
@@ -901,26 +809,26 @@ begin
               ListarTarefas(DateToStr(now));
              end;
   end;
-  AnimaStatus.Start;
+  Result := Lay_main;
 end;
 
-procedure TTela_Tarefas.ID(value: string);
+procedure TWindows_tasks.FormDestroy(Sender: TObject);
+begin
+  if Assigned(FTela_Categorias) then
+   FTela_Categorias.DisposeOf;
+end;
+
+procedure TWindows_tasks.ID(value: string);
 begin
   Fid := value;
 end;
 
-procedure TTela_Tarefas.Label_DataClick(Sender: TObject);
-Var
- FService : IFMXVirtualKeyboardService;
+procedure TWindows_tasks.Label_DataClick(Sender: TObject);
 begin
-  TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, IInterface(FService));
-  if (FService <> Nil) and (TVirtualKeyboardState.Visible in FService.VirtualKeyboardState) then
-   begin
-    FService.HideVirtualKeyboard;
-   end;
   FCalendar := TViewDialogsMessages.New;
-  Tela_tarefas.AddObject(
-                               FCalendar.Calendar
+  Form_Windows_Main.AddObject(
+                          FCalendar.Pai(Form_Windows_Main)
+                                         .Calendar
                                             .Data(StrToDate(Label_Data.Text))
                                             .AcaoBotao(Procedure ()
                                                        begin
@@ -934,14 +842,23 @@ begin
                                             .Exibe);
 end;
 
-procedure TTela_Tarefas.ListarTarefas(Data: string);
+procedure TWindows_tasks.Lay_mainResize(Sender: TObject);
+begin
+   Rect_abrir_categorias.Width := Lay_main.Width + 45;
+   Rect_abrir_categorias.Height := Lay_main.Height-2;
+   Rect_abrir_categorias.Position.Y := 1;
+   AnimaTelaCategorias.StartValue := - (Rect_abrir_categorias.Width + 5);
+   if Rect_abrir_categorias.Position.X <> 0 then
+    Rect_abrir_categorias.Position.x := - (Rect_abrir_categorias.Width + 5);
+end;
+
+procedure TWindows_tasks.ListarTarefas(Data: string);
 begin
   Label_Data.Text := Data;
   AtualizaListaTarefas(data);
 end;
 
-
-procedure TTela_Tarefas.ListaTarefasItemClickEx(const Sender: TObject;
+procedure TWindows_tasks.ListaTarefasItemClickEx(const Sender: TObject;
   ItemIndex: Integer; const LocalClickPos: TPointF;
   const ItemObject: TListItemDrawable);
 Var
@@ -991,11 +908,10 @@ begin
         FMain := False;
         ExibeTarefa(false);
       end;
-
    end;
 end;
 
-procedure TTela_Tarefas.NovaTarefa(Main : Boolean);
+procedure TWindows_tasks.NovaTarefa(Main: Boolean);
 begin
   if Main then
    TabTarefas.ActiveTab := TabNovoEditaTarefa
@@ -1022,37 +938,7 @@ begin
   Fstatus    := 'fazer';
 end;
 
-procedure TTela_Tarefas.TabTarefasChange(Sender: TObject);
-begin
-  case TabTarefas.ActiveTab.Index of
-   0: begin                                    //tabPrincipal ou Lista
-       title_MinhasTarefas.Visible := True;
-       title_EditaTarefa.Visible   := False;
-       title_NovaTarefa.Visible    := False;
-      end;
-   1: begin                                     //tabExibe
-       title_MinhasTarefas.Visible := True;
-       title_EditaTarefa.Visible   := False;
-       title_NovaTarefa.Visible    := False;
-      end;
-   2: begin                                      //tabEditaNovo
-       if FModo = mEditar then
-        begin
-         title_MinhasTarefas.Visible := False;
-         title_EditaTarefa.Visible   := True;
-         title_NovaTarefa.Visible    := False;
-        end
-       else
-        begin
-         title_MinhasTarefas.Visible := False;
-         title_EditaTarefa.Visible   := False;
-         title_NovaTarefa.Visible    := True;
-        end;
-      end;
-  end;
-end;
-
-procedure TTela_Tarefas.ValidaTarefaTimer(Sender: TObject);
+procedure TWindows_tasks.ValidaTarefaTimer(Sender: TObject);
 begin
   Btn_OK.enabled := (not Edit_tarefa.Text.IsEmpty) and (Label_categoria_btn.Text <> 'Selecione uma categoria');
 end;

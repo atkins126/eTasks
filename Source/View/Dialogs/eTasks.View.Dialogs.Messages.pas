@@ -300,6 +300,46 @@ begin
                           Text_message.Text     := Sucesso_criar_conta;
                           Button_message.Bitmap := Btn_comecar.Bitmap;
                         end;
+
+    //Mensagens referentes a categorias
+    tpmCategoria_Inserida:
+                        begin
+                          Img_message.Bitmap    := Img_sucesso.Bitmap;
+                          Text_message.Text     := categoria_Inserida;
+                          Button_message.Bitmap := btn_entendi.Bitmap;
+                        end;
+    tpmCategoria_editada:
+                        begin
+                          Img_message.Bitmap    := Img_sucesso.Bitmap;
+                          Text_message.Text     := categoria_editada;
+                          Button_message.Bitmap := btn_entendi.Bitmap;
+                        end;
+    tpmCategoria_apagada:
+                        begin
+                          Img_message.Bitmap    := Img_sucesso.Bitmap;
+                          Text_message.Text     := categoria_apagada;
+                          Button_message.Bitmap := btn_entendi.Bitmap;
+                        end;
+
+    //Mensagens referentes a Tasks
+    tpmTasks_Inserida:
+                        begin
+                          Img_message.Bitmap    := Img_sucesso.Bitmap;
+                          Text_message.Text     := Tasks_Inserida;
+                          Button_message.Bitmap := btn_entendi.Bitmap;
+                        end;
+    tpmTasks_editada:
+                        begin
+                          Img_message.Bitmap    := Img_sucesso.Bitmap;
+                          Text_message.Text     := Tasks_editada;
+                          Button_message.Bitmap := btn_entendi.Bitmap;
+                        end;
+    tpmTasks_apagada:
+                        begin
+                          Img_message.Bitmap    := Img_sucesso.Bitmap;
+                          Text_message.Text     := Tasks_apagada;
+                          Button_message.Bitmap := btn_entendi.Bitmap;
+                        end;
   end;
 end;
 

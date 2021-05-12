@@ -183,6 +183,7 @@ type
     procedure Sai_sem_conexaoFinish(Sender: TObject);
     procedure Sai_splash_screenFinish(Sender: TObject);
     procedure btn_atualizarClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
     Sheet_fotos : iViewDialogsFactory;
@@ -190,6 +191,7 @@ type
     Loading     : iViewDialogsFactory;
     FCalendar   : iViewDialogsFactory;
     FTela       : Telas;
+    FId_tarefa  : string;
     {FKBBounds: TRectF;
     FNeedOffset: Boolean;
     procedure CalcContentBoundsProc(Sender: TObject;
@@ -234,6 +236,7 @@ Uses
   eTasks.View.Android.login,
   eTasks.View.Android.help,
   eTasks.View.Android.tasks,
+  eTasks.View.Android.categories,
   //eTasks - Controller units
   eTasks.Controller.Interfaces,
   eTasks.Controller.Factory,
@@ -331,6 +334,7 @@ begin
                           Tela_Tarefas.ShowModal(Procedure (ModalResult: TModalResult)
                                                  Begin
                                                    AniAberturaFechaForm.Start;
+                                                   ListarTarefas(Label_Data.Text);
                                                  End);
                          end;
       TelaTarefas_Novo : begin
@@ -340,18 +344,29 @@ begin
                           Tela_Tarefas.ShowModal(Procedure (ModalResult: TModalResult)
                                                        Begin
                                                          AniAberturaFechaForm.Start;
+                                                         ListarTarefas(Label_Data.Text);
                                                        End);
                          end;
       TelaTarefas_Exibe : begin
                           if not Assigned(Tela_tarefas) then
                             Application.CreateForm(Ttela_tarefas, Tela_Tarefas);
                           Tela_Tarefas.Acao(taExibe);
+                          Tela_Tarefas.ID(FId_tarefa);
                           Tela_Tarefas.ShowModal(Procedure (ModalResult: TModalResult)
+                                                       Begin
+                                                         AniAberturaFechaForm.Start;
+                                                         ListarTarefas(Label_Data.Text);
+                                                       End);
+                         end;
+      TelaCategorias   : begin
+                          if not Assigned(Tela_categorias) then
+                            Application.CreateForm(TTela_categorias, Tela_categorias);
+                          Tela_categorias.Acao(taListar);
+                          Tela_categorias.ShowModal(Procedure (ModalResult: TModalResult)
                                                        Begin
                                                          AniAberturaFechaForm.Start;
                                                        End);
                          end;
-      TelaCategorias   : showmessage('a');
       TelaObjetivos    : showmessage('a');
       TelaListas       : showmessage('a');
       TelaAjuda        : begin
@@ -426,17 +441,28 @@ begin
                                tarefa : TTarefa;
                               begin
                                 loading.Loading.Fechar;
-                                listaTarefas.Items.Clear;
-                                Lay_Lista_vazia.Visible := False;
-                                if Tarefas.ListagemdeTarefas.Count <> 0 then
+                                if erro = '' then
                                  begin
-                                   ListaTarefas.BeginUpdate;
-                                   for Tarefa in Tarefas.ListagemdeTarefas.Values do
-                                    Add_tarefa(Tarefa.id, Tarefa.status, Tarefa.tarefa, Tarefa.descricao, Tarefa.Cat_icon);
-                                   ListaTarefas.EndUpdate;
+                                  listaTarefas.Items.Clear;
+                                  Lay_Lista_vazia.Visible := False;
+                                  if Tarefas.ListagemdeTarefas.Count <> 0 then
+                                   begin
+                                    ListaTarefas.BeginUpdate;
+                                    for Tarefa in Tarefas.ListagemdeTarefas.Values do
+                                     Add_tarefa(Tarefa.id, Tarefa.status, Tarefa.tarefa, Tarefa.descricao, Tarefa.Cat_icon);
+                                    ListaTarefas.EndUpdate;
+                                   end
+                                  else
+                                   Lay_Lista_vazia.Visible := True;
                                  end
                                 else
-                                 Lay_Lista_vazia.Visible := True;
+                                 begin
+                                   if erro = 'vazio' then
+                                    begin
+                                      ListaTarefas.Items.Clear;
+                                      Lay_Lista_vazia.Visible := true;
+                                    end;
+                                 end;
                               end);
 end;
 
@@ -625,6 +651,13 @@ begin
                                          .TipoMensagem(tpmPermissao_solicitar_camera)
                                          .Exibe
                               );
+end;
+
+procedure TForm_Android_main.FormClose(Sender: TObject;
+  var Action: TCloseAction);
+begin
+  Action := TCloseAction.caFree;
+  Form_Android_main := nil;
 end;
 
 procedure TForm_Android_main.FormCreate(Sender: TObject);
@@ -834,20 +867,24 @@ begin
                ItemObject.TagString := 'fazer';
               end;
             end;
+         end
+        else
+         begin
+          FId_tarefa := TListView(sender).Items[ItemIndex].TagString;
+          AbreTela(TelaTarefas_exibe);
          end;
-
       end
      else
-      AbreTela(TelaTarefas_exibe);
-      //ShowMessage('Você clicou no item nº '+TListView(sender).Items[ItemIndex].TagString);
-
+      begin
+       FId_tarefa := TListView(sender).Items[ItemIndex].TagString;
+       AbreTela(TelaTarefas_exibe);
+      end;
    end;
 end;
 
 procedure TForm_Android_main.ListaTarefasPullRefresh(Sender: TObject);
 begin
   ListarTarefas(Label_Data.Text);
-  Add_tarefa('00011', 'fazer', 'teste_pull_refresh', 'teste do pull refresh', 'Cat_015');
 end;
 
 procedure TForm_Android_main.menu_ajudaClick(Sender: TObject);
@@ -859,8 +896,8 @@ end;
 
 procedure TForm_Android_main.Menu_categoriasClick(Sender: TObject);
 begin
-   {todo 0 -oRafaelAlves -cImplementar: Abrir form de Categorias}
    MainMenu.HideMaster;
+   AbreTela(TelaCategorias);
 end;
 
 procedure TForm_Android_main.Menu_comprasClick(Sender: TObject);
